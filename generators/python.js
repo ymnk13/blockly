@@ -193,3 +193,76 @@ Blockly.Python.scrub_ = function(block, code) {
   var nextCode = Blockly.Python.blockToCode(nextBlock);
   return commentCode + code + nextCode;
 };
+
+
+
+Blockly.Python.multipleCodeToOutput = function(strs,outputStrs) {
+    var codeSplit = strs.split("\n");
+    codeSplit = codeSplit.filter(function(element,index,array){return element!=""});
+    if(codeSplit.length < 2){
+	var code = outputStrs+" = "+strs;
+	return code;
+    }
+    var temp = Blockly.Python.multipleCodeSplit(strs)
+    var firstCodesStr = temp[1]
+    var lastCodesStr = temp[0]
+    var code = outputStrs+" = "+firstCodesStr;
+    return lastCodesStr+"\n"+code;
+}
+
+Blockly.Python.multipleCodeSplit = function(strs){
+    var codeSplit = strs.split("\n");
+    codeSplit = codeSplit.filter(function(element,index,array){return element!=""});
+    if(codeSplit.length < 2){
+	return ['',strs];
+    }
+    // 最後の一行を判定
+    var i;
+    for(i = codeSplit.length-2; i >=0; i--){
+	var preString = codeSplit[i+1]
+	if(preString.charAt(0)==","){
+	    // 行頭に","が有る = 前のコードの続き
+	    continue
+	}else{
+	    break;
+	}
+    }
+    var lastCodes = [];
+    var firstCodes = [];
+    for(var j = i+1; j <codeSplit.length; j++){
+	firstCodes.push(codeSplit[j])
+    }
+    for(var j = i; j >=0; j--){
+	lastCodes.push(codeSplit[j]);
+    }
+    lastCodes.reverse()
+    var lastCodesStr = lastCodes.join("\n")
+    
+    if(firstCodes.length > 1){
+	var firstCodesStr = firstCodes.join("");
+    }else{
+	var firstCodesStr = firstCodes[0]+"\n"
+    }
+    return [lastCodesStr,firstCodesStr]
+}
+
+Blockly.Python.joinCodesToOperator = function(inputA,inputB,operator){
+    var inputACodes = Blockly.Python.multipleCodeSplit(inputA);
+    var inputBCodes = Blockly.Python.multipleCodeSplit(inputB);
+    var code = []
+    var inputAFinalCode = inputACodes[1].replace(/[\n\r]/g,"")
+    if(inputACodes[0] == ''){
+	
+    }else{
+	code.push(inputACodes[0])
+    }
+    var inputBFinalCode = inputBCodes[1].replace(/[\n\r]/g,"")
+    if(inputBCodes[0] == ''){
+    }else{
+	code.push(inputBCodes[0])
+    }
+    code.push((new String(operator)).format(inputAFinalCode,inputBFinalCode))
+    var codeStr = code.join('\n')
+    return codeStr
+}
+
