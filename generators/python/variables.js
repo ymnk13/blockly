@@ -33,6 +33,7 @@ Blockly.Python['variables_get'] = function(block) {
   // Variable getter.
   var code = Blockly.Python.variableDB_.getName(block.getFieldValue('VAR'),
       Blockly.Variables.NAME_TYPE);
+    console.log(code)
   return [code, Blockly.Python.ORDER_ATOMIC];
 };
 
@@ -42,5 +43,5 @@ Blockly.Python['variables_set'] = function(block) {
       Blockly.Python.ORDER_NONE) || '0';
   var varName = Blockly.Python.variableDB_.getName(block.getFieldValue('VAR'),
       Blockly.Variables.NAME_TYPE);
-  return varName + ' = ' + argument0 + '\n';
+  return Blockly.Python.multipleCodeToOutput(argument0,varName)+"\n";
 };
