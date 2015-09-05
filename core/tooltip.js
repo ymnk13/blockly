@@ -112,6 +112,8 @@ Blockly.Tooltip.MARGINS = 5;
  */
 Blockly.Tooltip.DIV = null;
 
+Blockly.Tooltip.lastSelectedBlockType = null;
+Blockly.Tooltip.lastSelectedBlockID = null;
 /**
  * Create the tooltip div and inject it onto the page.
  */
@@ -132,21 +134,94 @@ Blockly.Tooltip.bindMouseEvents = function(element) {
   Blockly.bindEvent_(element, 'mouseover', null, Blockly.Tooltip.onMouseOver_);
   Blockly.bindEvent_(element, 'mouseout', null, Blockly.Tooltip.onMouseOut_);
   Blockly.bindEvent_(element, 'mousemove', null, Blockly.Tooltip.onMouseMove_);
+  Blockly.bindEvent_(element, 'mousedown', null, Blockly.Tooltip.onMouseDown_);
 };
+Blockly.Tooltip.onMouseDown_ = function(e){
+    if (!Blockly.isRightButton(e)) {
+	return;
+    }
+    var element = e.target;
 
+    while (!goog.isString(element.tooltip) && !goog.isFunction(element.tooltip)) {
+
+	element = element.tooltip;
+    }
+    if(!element.workspace.isFlyout){
+	return;
+    }
+    Blockly.Tooltip.lastSelectedBlockID = null;
+    e.stopPropagation();
+}
 /**
  * Hide the tooltip if the mouse is over a different object.
  * Initialize the tooltip to potentially appear for this object.
  * @param {!Event} e Mouse event.
  * @private
  */
+Blockly.Tooltip.autoInsertBlock = function(element){
+    if(!element.workspace.isFlyout){
+	return;
+    }
+    if(!(element.inputList.length == 1)){
+	return;
+    }
+    if(Blockly.Tooltip.lastSelectedBlockType == element.type){
+	return;
+    }
+    Blockly.Tooltip.lastSelectedBlockType = element.type;
+    var workspace = Blockly.getMainWorkspace();
+    var newblock = Blockly.Block.obtain(workspace,element.type);
+    newblock.initSvg();
+    newblock.render();
+
+    //console.log(newblock.getConnections_(false));
+    var inputConne = newblock.getConnections_(false)[0]; // inverse
+    var oppositeType = Blockly.OPPOSITE_TYPE[inputConne.type];
+    //for(var i in inputConne.dbList_[oppositeType]){
+    var selectedBlock = Blockly.selected;
+    if(selectedBlock == null ){
+	for(var i = 0; i < inputConne.dbList_[oppositeType].length;++i){
+	    var T = inputConne.dbList_[oppositeType][i];
+	    if(T.sourceBlock_.type == "output"){
+		break;
+	    }
+	}
+    }else{
+	console.log(selectedBlock.outputConnection.type);
+	for(var i = 0; i < inputConne.dbList_[oppositeType].length;++i){
+	    var T = inputConne.dbList_[oppositeType][i];
+	    console.log(selectedBlock.id)
+	    console.log(T.sourceBlock_);
+	    if(selectedBlock.parentBlock_.id == T.sourceBlock_.id){
+		break;
+	    }
+	}
+	console.log(outConne);
+	var outConne = inputConne.dbList_[oppositeType][i];
+	inputConne.connect(outConne);
+	Blockly.Tooltip.lastSelectedBlockID = newblock.id;
+	return;
+
+    }
+    var outConne = inputConne.dbList_[oppositeType][i]; //output
+    // typeで制限があるものがきた場合のしょりができていない。
+    // BGRtoGray -> BGRtoGrayのばあい。
+    // checktype => connection.js singleConnection_を変化させる。
+    inputConne.connect(outConne);
+
+    Blockly.Tooltip.lastSelectedBlockID = newblock.id;
+}
+
 Blockly.Tooltip.onMouseOver_ = function(e) {
   // If the tooltip is an object, treat it as a pointer to the next object in
   // the chain to look at.  Terminate when a string or function is found.
   var element = e.target;
+
   while (!goog.isString(element.tooltip) && !goog.isFunction(element.tooltip)) {
     element = element.tooltip;
   }
+  Blockly.Tooltip.autoInsertBlock(element);    
+
   if (Blockly.Tooltip.element_ != element) {
     Blockly.Tooltip.hide();
     Blockly.Tooltip.poisonedElement_ = null;
@@ -167,6 +242,40 @@ Blockly.Tooltip.onMouseOut_ = function(e) {
   // event and kill it if a mouseOver is received immediately.
   // This way the task only fully executes if mousing into the void.
   Blockly.Tooltip.mouseOutPid_ = setTimeout(function() {
+      var element = e.target;
+	
+      while (!goog.isString(element.tooltip) && !goog.isFunction(element.tooltip)) {
+
+        element = element.tooltip;
+      }
+	
+      if(Blockly.Tooltip.lastSelectedBlockID &&
+        Blockly.Tooltip.lastSelectedBlockID &&
+        element.workspace.isFlyout){
+	var workspace = Blockly.getMainWorkspace();
+	var lastSelectedBlock = workspace.getBlockById(Blockly.Tooltip.lastSelectedBlockID);
+	var inputBlock = lastSelectedBlock.childBlocks_[0]
+        lastSelectedBlock.setParent(null);
+        inputBlock.setParent(null);
+	
+        // Connect
+        var inputConne = inputBlock.getConnections_(false)[0]; // input
+	var oppositeType = Blockly.OPPOSITE_TYPE[inputConne.type];
+        for(var i = 0; i < inputConne.dbList_[oppositeType].length;++i){
+	    var T = inputConne.dbList_[oppositeType][i];
+	    if(T.sourceBlock_.type == "output"){
+              break;
+	    }
+	  }
+  	  var outConne = inputConne.dbList_[oppositeType][i]; //output
+	  inputConne.connect(outConne);
+	
+	  lastSelectedBlock.dispose();
+	  //outConne.sourceBlock_.dispose();
+	
+	  Blockly.Tooltip.lastSelectedBlockID = null;
+	  Blockly.Tooltip.lastSelectedBlockType = null;
+        }
         Blockly.Tooltip.element_ = null;
         Blockly.Tooltip.poisonedElement_ = null;
         Blockly.Tooltip.hide();
