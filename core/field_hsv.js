@@ -170,7 +170,7 @@ Blockly.FieldHSV.prototype.setColumns = function(columns) {
 Blockly.FieldHSV.prototype.showEditor_ = function() {
   Blockly.WidgetDiv.show(this, Blockly.FieldHSV.widgetDispose_);
   // Create the palette using Closure.
-  var picker = new goog.ui.HsvPalette();
+  var picker = new goog.ui.HsvPalette(null,this.colour_);
 
   // Position the palette to line up with the field.
   // Record windowSize and scrollOffset before adding the palette.
