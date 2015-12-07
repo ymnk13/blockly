@@ -221,7 +221,11 @@ Blockly.Tooltip.onMouseOver_ = function(e) {
     element = element.tooltip;
   }
   Blockly.Tooltip.autoInsertBlock(element);    
-
+  if(element.workspace.isFlyout){
+    if (Blockly.selected) {
+      Blockly.selected.unselect();
+    }
+  }
   if (Blockly.Tooltip.element_ != element) {
     Blockly.Tooltip.hide();
     Blockly.Tooltip.poisonedElement_ = null;
