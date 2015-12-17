@@ -159,7 +159,8 @@ Blockly.Tooltip.deleteAutoInsertedBlock = function(){
 	var workspace = Blockly.getMainWorkspace();
 	var lastSelectedBlock = workspace.getBlockById(Blockly.Tooltip.lastSelectedBlockID);
 	var inputBlock = lastSelectedBlock.childBlocks_[0];
-	// separation
+	var parentBlock = lastSelectedBlock.parentBlock_;
+
 	lastSelectedBlock.setParent(null);
 	inputBlock.setParent(null);
 	// Connect
@@ -171,8 +172,17 @@ Blockly.Tooltip.deleteAutoInsertedBlock = function(){
 		break;
 	    }
 	}
-	var outConne = inputConne.dbList_[oppositeType][i]; //output
-	inputConne.connect(outConne);
+	if(Blockly.selected == null){
+	    var outConne = inputConne.dbList_[oppositeType][i]; //output
+	    inputConne.connect(outConne);
+	}else{
+	    lastSelectedBlock.dispose();
+	    var parentConne = parentBlock.getConnections_(false)[0];
+	    var connection = Blockly.Connection.singleConnection_(
+		parentConne.sourceBlock_,
+		inputConne.sourceBlock_);
+	    connection.connect(inputConne)
+	}
 
 	lastSelectedBlock.dispose();
 	//outConne.sourceBlock_.dispose();
