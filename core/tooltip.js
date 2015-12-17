@@ -181,7 +181,11 @@ Blockly.Tooltip.deleteAutoInsertedBlock = function(){
 	    var connection = Blockly.Connection.singleConnection_(
 		parentConne.sourceBlock_,
 		inputConne.sourceBlock_);
-	    connection.connect(inputConne)
+	    try{
+		connection.connect(inputConne)
+	    }catch(e){
+		console.log("Error",e);
+	    }
 	}
 
 	lastSelectedBlock.dispose();
@@ -231,8 +235,12 @@ Blockly.Tooltip.autoInsertBlock = function(element){
 	}
 	console.log(outConne);
 	var outConne = inputConne.dbList_[oppositeType][i];
-	inputConne.connect(outConne);
-	Blockly.Tooltip.lastSelectedBlockID = newblock.id;
+	if(inputConne.checkType_(outConne)){
+	    inputConne.connect(outConne);
+	    Blockly.Tooltip.lastSelectedBlockID = newblock.id;
+	}else{
+	    newblock.dispose();
+	}
 	return;
 
     }
