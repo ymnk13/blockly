@@ -206,6 +206,7 @@ Blockly.Tooltip.autoInsertBlock = function(element){
     if(Blockly.Tooltip.lastSelectedBlockType == element.type){
 	return;
     }
+    Blockly.Tooltip.deleteAutoInsertedBlock();
     Blockly.Tooltip.lastSelectedBlockType = element.type;
     var workspace = Blockly.getMainWorkspace();
     var newblock = Blockly.Block.obtain(workspace,element.type);
