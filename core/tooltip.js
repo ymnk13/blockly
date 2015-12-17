@@ -201,7 +201,6 @@ Blockly.Tooltip.autoInsertBlock = function(element){
     //console.log(newblock.getConnections_(false));
     var inputConne = newblock.getConnections_(false)[0]; // inverse
     var oppositeType = Blockly.OPPOSITE_TYPE[inputConne.type];
-    //for(var i in inputConne.dbList_[oppositeType]){
     var selectedBlock = Blockly.selected;
     if(selectedBlock == null ){
 	for(var i = 0; i < inputConne.dbList_[oppositeType].length;++i){
@@ -231,9 +230,23 @@ Blockly.Tooltip.autoInsertBlock = function(element){
     // typeで制限があるものがきた場合のしょりができていない。
     // BGRtoGray -> BGRtoGrayのばあい。
     // checktype => connection.js singleConnection_を変化させる。
-    inputConne.connect(outConne);
-
-    Blockly.Tooltip.lastSelectedBlockID = newblock.id;
+    var inputedConne = outConne.targetConnection; // input
+    var insertBlockConne = inputConne;
+    inputedConne.sourceBlock_.setParent(null);
+    // Try Connect
+    var connection = Blockly.Connection.singleConnection_(
+	insertBlockConne.sourceBlock_,
+	inputedConne.sourceBlock_);
+    try{
+	connection.connect(inputedConne);
+	outConne.connect(insertBlockConne);
+	Blockly.Tooltip.lastSelectedBlockID = newblock.id;
+    }catch (e){
+	outConne.connect(inputedConne);
+	insertBlockConne.sourceBlock_.dispose();
+	Blockly.Tooltip.lastSelectedBlockID = null;
+    }
+    return;
 }
 
 /**
