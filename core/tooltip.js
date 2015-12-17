@@ -138,6 +138,7 @@ Blockly.Tooltip.bindMouseEvents = function(element) {
 };
 Blockly.Tooltip.onMouseDown_ = function(e){
     if (!Blockly.isRightButton(e)) {
+	Blockly.Tooltip.deleteAutoInsertedBlock();
 	return;
     }
     var element = e.target;
@@ -152,12 +153,35 @@ Blockly.Tooltip.onMouseDown_ = function(e){
     Blockly.Tooltip.lastSelectedBlockID = null;
     e.stopPropagation();
 }
-/**
- * Hide the tooltip if the mouse is over a different object.
- * Initialize the tooltip to potentially appear for this object.
- * @param {!Event} e Mouse event.
- * @private
- */
+
+Blockly.Tooltip.deleteAutoInsertedBlock = function(){
+    if(Blockly.Tooltip.lastSelectedBlockID){
+	var workspace = Blockly.getMainWorkspace();
+	var lastSelectedBlock = workspace.getBlockById(Blockly.Tooltip.lastSelectedBlockID);
+	var inputBlock = lastSelectedBlock.childBlocks_[0];
+	// separation
+	lastSelectedBlock.setParent(null);
+	inputBlock.setParent(null);
+	// Connect
+        var inputConne = inputBlock.getConnections_(false)[0]; // input
+	var oppositeType = Blockly.OPPOSITE_TYPE[inputConne.type];
+        for(var i = 0; i < inputConne.dbList_[oppositeType].length;++i){
+	    var T = inputConne.dbList_[oppositeType][i];
+	    if(T.sourceBlock_.type == "output"){
+		break;
+	    }
+	}
+	var outConne = inputConne.dbList_[oppositeType][i]; //output
+	inputConne.connect(outConne);
+
+	lastSelectedBlock.dispose();
+	//outConne.sourceBlock_.dispose();
+
+	Blockly.Tooltip.lastSelectedBlockID = null;
+	Blockly.Tooltip.lastSelectedBlockType = null;
+    }
+}
+
 Blockly.Tooltip.autoInsertBlock = function(element){
     if(!element.workspace.isFlyout){
 	return;
@@ -212,6 +236,12 @@ Blockly.Tooltip.autoInsertBlock = function(element){
     Blockly.Tooltip.lastSelectedBlockID = newblock.id;
 }
 
+/**
+ * Hide the tooltip if the mouse is over a different object.
+ * Initialize the tooltip to potentially appear for this object.
+ * @param {!Event} e Mouse event.
+ * @private
+ */
 Blockly.Tooltip.onMouseOver_ = function(e) {
   // If the tooltip is an object, treat it as a pointer to the next object in
   // the chain to look at.  Terminate when a string or function is found.
@@ -220,12 +250,8 @@ Blockly.Tooltip.onMouseOver_ = function(e) {
   while (!goog.isString(element.tooltip) && !goog.isFunction(element.tooltip)) {
     element = element.tooltip;
   }
-  Blockly.Tooltip.autoInsertBlock(element);    
-  if(element.workspace.isFlyout){
-    if (Blockly.selected) {
-      Blockly.selected.unselect();
-    }
-  }
+  Blockly.Tooltip.autoInsertBlock(element);
+
   if (Blockly.Tooltip.element_ != element) {
     Blockly.Tooltip.hide();
     Blockly.Tooltip.poisonedElement_ = null;
@@ -252,38 +278,11 @@ Blockly.Tooltip.onMouseOut_ = function(e) {
 
         element = element.tooltip;
       }
-	
-      if(Blockly.Tooltip.lastSelectedBlockID &&
-        Blockly.Tooltip.lastSelectedBlockID &&
-        element.workspace.isFlyout){
-	var workspace = Blockly.getMainWorkspace();
-	var lastSelectedBlock = workspace.getBlockById(Blockly.Tooltip.lastSelectedBlockID);
-	var inputBlock = lastSelectedBlock.childBlocks_[0]
-        lastSelectedBlock.setParent(null);
-        inputBlock.setParent(null);
-	
-        // Connect
-        var inputConne = inputBlock.getConnections_(false)[0]; // input
-	var oppositeType = Blockly.OPPOSITE_TYPE[inputConne.type];
-        for(var i = 0; i < inputConne.dbList_[oppositeType].length;++i){
-	    var T = inputConne.dbList_[oppositeType][i];
-	    if(T.sourceBlock_.type == "output"){
-              break;
-	    }
-	  }
-  	  var outConne = inputConne.dbList_[oppositeType][i]; //output
-	  inputConne.connect(outConne);
-	
-	  lastSelectedBlock.dispose();
-	  //outConne.sourceBlock_.dispose();
-	
-	  Blockly.Tooltip.lastSelectedBlockID = null;
-	  Blockly.Tooltip.lastSelectedBlockType = null;
-        }
-        Blockly.Tooltip.element_ = null;
-        Blockly.Tooltip.poisonedElement_ = null;
-        Blockly.Tooltip.hide();
-      }, 1);
+      Blockly.Tooltip.deleteAutoInsertedBlock();
+      Blockly.Tooltip.element_ = null;
+      Blockly.Tooltip.poisonedElement_ = null;
+      Blockly.Tooltip.hide();
+  }, 1);
   clearTimeout(Blockly.Tooltip.showPid_);
 };
 
