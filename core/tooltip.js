@@ -217,7 +217,7 @@ Blockly.Tooltip.autoInsertBlock = function(element){
     var inputConne = newblock.getConnections_(false)[0]; // inverse
     var oppositeType = Blockly.OPPOSITE_TYPE[inputConne.type];
     var selectedBlock = Blockly.selected;
-    if(selectedBlock == null ){
+    if(selectedBlock == null || selectedBlock.parentBlock_ == null){
 	for(var i = 0; i < inputConne.dbList_[oppositeType].length;++i){
 	    var T = inputConne.dbList_[oppositeType][i];
 	    if(T.sourceBlock_.type == "output"){
