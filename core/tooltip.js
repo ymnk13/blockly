@@ -216,7 +216,7 @@ Blockly.Tooltip.autoInsertBlock = function(element){
     if (element.inputsInline){
 	return;
     }
-    if (element.type == "comment"){
+    if (element.type == "comment" || element.type == "variables_get"){
 	return;
     }
     Blockly.Tooltip.deleteAutoInsertedBlock();
