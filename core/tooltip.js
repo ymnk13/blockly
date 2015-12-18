@@ -219,7 +219,12 @@ Blockly.Tooltip.autoInsertBlock = function(element){
     if (element.type == "comment" || element.type == "variables_get"){
 	return;
     }
-    Blockly.Tooltip.deleteAutoInsertedBlock();
+    try{
+	Blockly.Tooltip.deleteAutoInsertedBlock();
+    }finally{
+	Blockly.Tooltip.lastSelectedBlockID = null;
+	Blockly.Tooltip.lastSelectedBlockType = null;
+    }
     Blockly.Tooltip.lastSelectedBlockType = element.type;
 
     var workspace = Blockly.getMainWorkspace();
@@ -241,6 +246,10 @@ Blockly.Tooltip.autoInsertBlock = function(element){
 	}
 
 	var inputedConnection = outputBlockConnection.targetConnection; // Connected with the output block
+	if(inputedConnection == null){
+	    newBlock.dispose();
+	    return;
+	}
 	inputedConnection.sourceBlock_.setParent(null);
 	// Try Connect
 	var connection = Blockly.Connection.singleConnection_(
