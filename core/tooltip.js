@@ -167,6 +167,19 @@ Blockly.Tooltip.deleteAutoInsertedBlock = function(){
 	    return;
 	}
 	var parentBlock = lastSelectedBlock.parentBlock_;
+	var parentBlockOutputPos = null;
+	if ( parentBlock.inputList.length > 1 ) {
+	    var connectionList = parentBlock.getConnections_(false);
+	    console.log(connectionList);
+	    for(var i = 0; i < parentBlock.inputList.length;++i){
+		if(parentBlock.inputList[i].connection.targetConnection!=null){
+		    if(parentBlock.inputList[i].connection.targetConnection.sourceBlock_.id == lastSelectedBlock.id){
+			parentBlockOutputPos = parentBlock.inputList[i].connection;
+		    }
+		}
+	    }
+	}
+	//return;
 
 	lastSelectedBlock.setParent(null);
 	inputBlock.setParent(null);
@@ -185,13 +198,19 @@ Blockly.Tooltip.deleteAutoInsertedBlock = function(){
 	}else{
 	    lastSelectedBlock.dispose();
 	    var parentConne = parentBlock.getConnections_(false)[0];
-	    var connection = Blockly.Connection.singleConnection_(
-		parentConne.sourceBlock_,
-		inputConne.sourceBlock_);
-	    try{
-		connection.connect(inputConne)
-	    }catch(e){
-		console.log("Error",e);
+	    console.log(parentBlock);
+	    console.log(parentBlock.getConnections_(false));
+	    if(parentBlockOutputPos!=null){
+		parentBlockOutputPos.connect(inputConne);
+	    }else{
+		var connection = Blockly.Connection.singleConnection_(
+		    parentConne.sourceBlock_,
+		    inputConne.sourceBlock_);
+		try{
+		    connection.connect(inputConne)
+		}catch(e){
+		    console.log("Error",e);
+		}
 	    }
 	}
 
@@ -267,17 +286,56 @@ Blockly.Tooltip.autoInsertBlock = function(element){
 	return;
     }else{
 	if(selectedBlock.parentBlock_  != null){
-	    if(!(selectedBlock.parentBlock_.inputList.length == 1)){
-		newBlock.dispose();
-		return;
-	    }
-	    var outConne = null;
-	    for(var i = 0; i < newBlockConnection.dbList_[oppositeType].length;++i){
-		var temp_Block = newBlockConnection.dbList_[oppositeType][i];
-		if(selectedBlock.parentBlock_.id == temp_Block.sourceBlock_.id){
-		    outConne = newBlockConnection.dbList_[oppositeType][i];
-		    break;
+	    if(selectedBlock.parentBlock_.inputList.length == 1){
+
+		var outConne = null;
+		for(var i = 0; i < newBlockConnection.dbList_[oppositeType].length;++i){
+		    var temp_Block = newBlockConnection.dbList_[oppositeType][i];
+		    if(selectedBlock.parentBlock_.id == temp_Block.sourceBlock_.id){
+			outConne = newBlockConnection.dbList_[oppositeType][i]; // OutputBlock
+			break;
+		    }
 		}
+	    }else{
+		// for multiple input able Block
+		console.log(selectedBlock.parentBlock_);
+
+		var outConne = null;
+		for(var i = 0; i < selectedBlock.parentBlock_.inputList.length;++i){
+		    var temp_connection = selectedBlock.parentBlock_.inputList[i];
+		    for(var j = 0; j<temp_connection.sourceBlock_.childBlocks_.length;++j){
+			if(temp_connection.sourceBlock_.childBlocks_[j].id == selectedBlock.id){
+			    outConne = temp_connection.connection;
+			    break;
+			}
+		    }
+		    if(!(outConne == null)){
+			break;
+		    }
+		}
+		if(outConne == null){
+		    return;
+		}
+		var inputedConnection = selectedBlock.getConnections_(false)[0];
+		var connectionList = outConne.sourceBlock_.getConnections_(false);
+
+		var connectionList = outConne.sourceBlock_.getConnections_(false);
+		for(var i = 0; i < connectionList.length; ++i){
+		    if(connectionList[i].targetConnection!=null &&
+		       connectionList[i].targetConnection.sourceBlock_.id == selectedBlock.id){
+			var parentConnection = connectionList[i];
+			break;
+		    }
+		}
+		console.log(inputedConnection);
+		inputedConnection.sourceBlock_.setParent(null);
+		var connection = Blockly.Connection.singleConnection_(
+		    newBlockConnection.sourceBlock_,
+		    inputedConnection.sourceBlock_);
+		connection.connect(inputedConnection);
+		newBlockConnection.connect(parentConnection);
+		Blockly.Tooltip.lastSelectedBlockID = newBlock.id;
+		return;
 	    }
 
 	    if(newBlockConnection.checkType_(outConne)){
