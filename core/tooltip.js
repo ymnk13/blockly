@@ -267,6 +267,10 @@ Blockly.Tooltip.autoInsertBlock = function(element){
 	return;
     }else{
 	if(selectedBlock.parentBlock_  != null){
+	    if(!(selectedBlock.parentBlock_.inputList.length == 1)){
+		newBlock.dispose();
+		return;
+	    }
 	    var outConne = null;
 	    for(var i = 0; i < newBlockConnection.dbList_[oppositeType].length;++i){
 		var temp_Block = newBlockConnection.dbList_[oppositeType][i];
