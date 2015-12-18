@@ -214,62 +214,56 @@ Blockly.Tooltip.autoInsertBlock = function(element){
     }
     Blockly.Tooltip.deleteAutoInsertedBlock();
     Blockly.Tooltip.lastSelectedBlockType = element.type;
-    var workspace = Blockly.getMainWorkspace();
-    var newblock = Blockly.Block.obtain(workspace,element.type);
-    newblock.initSvg();
-    newblock.render();
 
-    //console.log(newblock.getConnections_(false));
-    var inputConne = newblock.getConnections_(false)[0]; // inverse
-    var oppositeType = Blockly.OPPOSITE_TYPE[inputConne.type];
+    var workspace = Blockly.getMainWorkspace();
+    var newBlock = Blockly.Block.obtain(workspace,element.type);
+    newBlock.initSvg();
+    newBlock.render();
+
+    var newBlockConnection = newBlock.getConnections_(false)[0];
+    var oppositeType = Blockly.OPPOSITE_TYPE[newBlockConnection.type];
     var selectedBlock = Blockly.selected;
     if(selectedBlock == null || selectedBlock.parentBlock_ == null){
-	for(var i = 0; i < inputConne.dbList_[oppositeType].length;++i){
-	    var T = inputConne.dbList_[oppositeType][i];
-	    if(T.sourceBlock_.type == "output"){
+	// search the Output Block
+	for(var i = 0; i < newBlockConnection.dbList_[oppositeType].length;++i){
+	    var temp_Block = newBlockConnection.dbList_[oppositeType][i];
+	    if(temp_Block.sourceBlock_.type == "output"){
+		var outputBlockConnection = newBlockConnection.dbList_[oppositeType][i]; //outputBlockConnection
 		break;
 	    }
 	}
-    }else{
-	console.log(selectedBlock.outputConnection.type);
-	for(var i = 0; i < inputConne.dbList_[oppositeType].length;++i){
-	    var T = inputConne.dbList_[oppositeType][i];
-	    console.log(selectedBlock.id)
-	    console.log(T.sourceBlock_);
-	    if(selectedBlock.parentBlock_.id == T.sourceBlock_.id){
-		break;
-	    }
-	}
-	console.log(outConne);
-	var outConne = inputConne.dbList_[oppositeType][i];
-	if(inputConne.checkType_(outConne)){
-	    inputConne.connect(outConne);
-	    Blockly.Tooltip.lastSelectedBlockID = newblock.id;
-	}else{
-	    newblock.dispose();
+
+	var inputedConnection = outputBlockConnection.targetConnection; // Connected with the output block
+	inputedConnection.sourceBlock_.setParent(null);
+	// Try Connect
+	var connection = Blockly.Connection.singleConnection_(
+	    newBlockConnection.sourceBlock_,
+	    inputedConnection.sourceBlock_);
+	try{
+	    connection.connect(inputedConnection);
+	    outputBlockConnection.connect(newBlockConnection);
+	    Blockly.Tooltip.lastSelectedBlockID = newBlock.id;
+	}catch (e){
+	    outputBlockConnection.connect(inputedConnection);
+	    newBlockConnection.sourceBlock_.dispose();
+	    Blockly.Tooltip.lastSelectedBlockID = null;
 	}
 	return;
-
-    }
-    var outConne = inputConne.dbList_[oppositeType][i]; //output
-    // typeで制限があるものがきた場合のしょりができていない。
-    // BGRtoGray -> BGRtoGrayのばあい。
-    // checktype => connection.js singleConnection_を変化させる。
-    var inputedConne = outConne.targetConnection; // input
-    var insertBlockConne = inputConne;
-    inputedConne.sourceBlock_.setParent(null);
-    // Try Connect
-    var connection = Blockly.Connection.singleConnection_(
-	insertBlockConne.sourceBlock_,
-	inputedConne.sourceBlock_);
-    try{
-	connection.connect(inputedConne);
-	outConne.connect(insertBlockConne);
-	Blockly.Tooltip.lastSelectedBlockID = newblock.id;
-    }catch (e){
-	outConne.connect(inputedConne);
-	insertBlockConne.sourceBlock_.dispose();
-	Blockly.Tooltip.lastSelectedBlockID = null;
+    }else{
+	for(var i = 0; i < newBlockConnection.dbList_[oppositeType].length;++i){
+	    var temp_Block = newBlockConnection.dbList_[oppositeType][i];
+	    if(selectedBlock.parentBlock_.id == temp_Block.sourceBlock_.id){
+		var outConne = newBlockConnection.dbList_[oppositeType][i];
+		break;
+	    }
+	}
+	if(newBlockConnection.checkType_(outConne)){
+	    newBlockConnection.connect(outConne);
+	    Blockly.Tooltip.lastSelectedBlockID = newBlock.id;
+	}else{
+	    newBlock.dispose();
+	}
+	return;
     }
     return;
 }
