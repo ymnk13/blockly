@@ -290,7 +290,11 @@ Blockly.Tooltip.autoInsertBlock = function(element){
 	    var x = selectedBlockConnection.x_;
 	    var y = selectedBlockConnection.y_;
 	    connection.connect(selectedBlockConnection);
-	    newBlock.moveBy(x-newBlock.width*0.7,y);
+	    var newX = x-newBlock.width;
+	    if(newX < 0 ){
+		newX = 0
+	    }
+	    newBlock.moveBy(newX,y);
 	    Blockly.Tooltip.lastSelectedBlockID = newBlock.id;
 	}
     }
