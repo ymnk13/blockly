@@ -351,6 +351,10 @@ Blockly.Tooltip.autoInsertBlock = function(element){
 		selectedBlockConnection.sourceBlock_);
 	    var x = selectedBlockConnection.x_;
 	    var y = selectedBlockConnection.y_;
+	    if(connection == false){
+		newBlock.dispose();
+		return;
+	    }
 	    connection.connect(selectedBlockConnection);
 	    var newX = x-newBlock.width;
 	    if(newX < 0 ){
