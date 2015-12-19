@@ -339,7 +339,35 @@ Blockly.onKeyDown_ = function(e) {
     try {
       if (Blockly.selected && Blockly.selected.isDeletable()) {
         Blockly.hideChaff();
-        Blockly.selected.dispose(true, true);
+	var selectedBlock = Blockly.selected;
+	var childBlock = selectedBlock.childBlocks_;
+	if ( childBlock.length == 1){
+	  childBlock = childBlock[0];
+	  // find connected Block
+	  var connectedInput = null;
+	  if( selectedBlock.parentBlock_ == null || selectedBlock.parentBlock_.length == 0){
+	    Blockly.selected.dispose(true, true);
+	  }else{
+	    for(var i = 0; i < selectedBlock.parentBlock_.inputList.length;++i){
+	      var temp_connection = selectedBlock.parentBlock_.inputList[i].connection;
+	      if(temp_connection.targetConnection != null){
+		if(temp_connection.targetConnection.sourceBlock_.id == selectedBlock.id){
+		  connectedInput = selectedBlock.parentBlock_.inputList[i];
+		}
+	      }
+	    }
+	    if(connectedInput != null){
+	      var connectedInputBlockConnection = connectedInput.connection;
+	      childBlock.setParent(null);
+	      selectedBlock.setParent(null);
+
+	      connectedInputBlockConnection.connect(childBlock.outputConnection);
+	      selectedBlock.dispose(true, true);
+	    }
+	  }
+	}else if(childBlock.length == 0){
+	  selectedBlock.dispose(true,true);
+	}
       }
     } finally {
       // Stop the browser from going back to the previous page.
