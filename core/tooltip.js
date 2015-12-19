@@ -326,9 +326,13 @@ Blockly.Tooltip.autoInsertBlock = function(element){
 		var connection = Blockly.Connection.singleConnection_(
 		    newBlockConnection.sourceBlock_,
 		    inputedConnection.sourceBlock_);
-		connection.connect(inputedConnection);
-		newBlockConnection.connect(parentConnection);
-		Blockly.Tooltip.lastSelectedBlockID = newBlock.id;
+		try{
+		    connection.connect(inputedConnection);
+		    newBlockConnection.connect(parentConnection);
+		    Blockly.Tooltip.lastSelectedBlockID = newBlock.id;
+		}finally{
+		    
+		}
 		return;
 	    }
 
