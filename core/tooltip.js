@@ -170,7 +170,6 @@ Blockly.Tooltip.deleteAutoInsertedBlock = function(){
 	var parentBlockOutputPos = null;
 	if ( parentBlock.inputList.length > 1 ) {
 	    var connectionList = parentBlock.getConnections_(false);
-	    console.log(connectionList);
 	    for(var i = 0; i < parentBlock.inputList.length;++i){
 		if(parentBlock.inputList[i].connection.targetConnection!=null){
 		    if(parentBlock.inputList[i].connection.targetConnection.sourceBlock_.id == lastSelectedBlock.id){
@@ -198,8 +197,6 @@ Blockly.Tooltip.deleteAutoInsertedBlock = function(){
 	}else{
 	    lastSelectedBlock.dispose();
 	    var parentConne = parentBlock.getConnections_(false)[0];
-	    console.log(parentBlock);
-	    console.log(parentBlock.getConnections_(false));
 	    if(parentBlockOutputPos!=null){
 		parentBlockOutputPos.connect(inputConne);
 	    }else{
@@ -298,8 +295,6 @@ Blockly.Tooltip.autoInsertBlock = function(element){
 		}
 	    }else{
 		// for multiple input able Block
-		console.log(selectedBlock.parentBlock_);
-
 		var outConne = null;
 		for(var i = 0; i < selectedBlock.parentBlock_.inputList.length;++i){
 		    var temp_connection = selectedBlock.parentBlock_.inputList[i];
@@ -327,7 +322,6 @@ Blockly.Tooltip.autoInsertBlock = function(element){
 			break;
 		    }
 		}
-		console.log(inputedConnection);
 		inputedConnection.sourceBlock_.setParent(null);
 		var connection = Blockly.Connection.singleConnection_(
 		    newBlockConnection.sourceBlock_,
