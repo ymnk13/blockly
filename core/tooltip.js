@@ -220,6 +220,211 @@ Blockly.Tooltip.deleteAutoInsertedBlock = function(){
 }
 
 Blockly.Tooltip.autoInsertBlock = function(element){
+    if(!(element.workspace.isFlyout)){
+	// this is not the Tooltip Block
+	return;
+    }
+    if(!(element.inputList.length == 1)){
+	//  the block has the multiple input
+	return;
+    }
+    if(Blockly.Tooltip.lastSelectedBlockType == element.type){
+	return;
+    }
+    if (element.inputsInline){
+	return;
+    }
+    try{
+	Blockly.Tooltip.deleteAutoInsertedBlock();
+    }finally{
+	Blockly.Tooltip.lastSelectedBlockID = null;
+	Blockly.Tooltip.lastSelectedBlockType = null;
+    }
+    Blockly.Tooltip.lastSelectedBlockType = element.type;
+
+    var workspace = Blockly.getMainWorkspace();
+    var newBlock = Blockly.Block.obtain(workspace,element.type);
+    newBlock.initSvg();
+    newBlock.render();
+    var newBlockConnections = newBlock.getConnections_();
+    if(!(newBlockConnections.length == 2)){
+	newBlock.dispose(true);
+	return;
+    }
+    var newBlockPreviousConnection = newBlock.previousConnection;
+    var newBlockNextConnection = newBlock.nextConnection;
+    var newBlockInputConnection = newBlock.outputConnection;
+    var selectedBlock = Blockly.selected;
+    var outputBlock = null;
+    var outputBlockConnection = null;
+    var inputBlock = null;
+    var inputBlockConnection = null;
+    var tryConnect = function(newBlockConnection,
+			      parentBlockConnection,
+			     inputBlockConnection){
+	inputBlockConnection.sourceBlock_.setParent(null);
+
+	var connection = Blockly.Connection.singleConnection_(
+	    newBlockConnection.sourceBlock_,
+	    inputBlockConnection.sourceBlock_);
+	if(!(typeof connection  == "object")){
+	    // Reconnect
+	    //parentBlockConnection.connect(inputBlockConnection);
+	    inputBlockConnection.connect(parentBlockConnection);
+	    newBlockConnection.sourceBlock_.dispose(true);
+	    return false;
+	}
+	connection.connect(inputBlockConnection);
+	console.log(parentBlockConnection);
+	if(parentBlockConnection.sourceBlock_.type == "output"){
+	    var connection = Blockly.Connection.singleConnection_(
+		parentBlockConnection.sourceBlock_,
+		newBlockConnection.sourceBlock_);
+	    connection.connect(newBlockConnection);
+	    return true;
+	}else{
+	    var connection = Blockly.Connection.singleConnection_(
+		parentBlockConnection.sourceBlock_,
+		newBlockConnection.sourceBlock_);
+	    if(typeof connection  == "object"){
+		connection.connect(newBlockConnection);
+		return true;
+	    }else{
+		//parentBlockConnection.connect(inputBlockConnection)
+		//inputBlockConnection.connect(parentBlockConnection)
+		newBlockInputConnection.sourceBlock_.setParent(null);
+		inputBlockConnection.sourceBlock_.setParent(null);
+		var connection = Blockly.Connection.singleConnection_(
+		    parentBlockConnection.sourceBlock_,
+		    inputBlockConnection.sourceBlock_);
+		connection.connect(inputBlockConnection);
+		newBlockInputConnection.sourceBlock_.dispose();
+		return false;
+	    }
+	}
+    }
+    if(selectedBlock){
+	if(selectedBlock.parentBlock_ == null){
+	    // the selected Block dont have the Output Block.
+	    // connect the selected Block.
+	    var selectedBlockConnection = selectedBlock.outputConnection;
+	    if(selectedBlock.type == "output"){
+		//selectedBlockConnection = selectedBlock.previousConnection;
+		selectedBlock.unselect();
+		return false;
+	    }
+	    var connection = Blockly.Connection.singleConnection_(
+		newBlock.outputConnection.sourceBlock_,
+		selectedBlockConnection.sourceBlock_);
+	    if(!(typeof connection  == "object")){
+		newBlock.dispose(true);
+		return;
+	    }
+	    var x = selectedBlockConnection.x_;
+	    var y = selectedBlockConnection.y_;
+	    connection.connect(selectedBlockConnection);
+	    var newX = x-newBlock.width;
+	    if(newX < 0 ){
+		newX = 0;
+	    }
+	    newBlock.moveBy(newX,y);
+	    Blockly.Tooltip.lastSelectedBlockID = newBlock.id;
+	}else{
+	    // the selected Block have the OutputBlock.
+	    outputBlock = selectedBlock.parentBlock_;
+	    outputBlockConnection = selectedBlock.parentBlock_.outputConnection;
+	    if(selectedBlock.parentBlock_.inputList.length == 1){
+		var selectedBlockInputConnection = selectedBlock.outputConnection;
+		var parentBlockInputConnection = selectedBlock.parentBlock_.outputConnection;
+		var parentBlockInputConnection = selectedBlock.parentBlock_.previousConnection;
+		if(selectedBlock.parentBlock_.previousConnection){
+		    var parentBlockInputConnection = selectedBlock.parentBlock_.previousConnection;
+		}else{
+		    var parentBlockInputConnection = selectedBlock.parentBlock_.outputConnection;
+		}
+
+		console.log("A",selectedBlock.parentBlock_);
+		var trycheck = tryConnect(newBlockInputConnection,
+					  parentBlockInputConnection,
+					  selectedBlockInputConnection);
+		if(trycheck){
+		    Blockly.Tooltip.lastSelectedBlockID = newBlock.id;
+		}else{
+		    //newBlockInputConnection.sourceBlock_.dispose()
+		    //console.log(newBlockInputConnection);
+		}
+	    }else{
+		var selectedBlockInputConnection = selectedBlock.outputConnection;
+		var selectedBlockNextConnection = selectedBlock.nextConnection;
+		// for multiple input able Block
+		var outConne = null;
+		for(var i = 0; i < selectedBlock.parentBlock_.inputList.length;++i){
+		    var temp_connection = selectedBlock.parentBlock_.inputList[i];
+		    for(var j = 0; j<temp_connection.sourceBlock_.childBlocks_.length;++j){
+			if(temp_connection.sourceBlock_.childBlocks_[j].id == selectedBlock.id){
+			    console.log(temp_connection.connection);
+			    outConne = temp_connection.connection;
+			    break;
+			}
+		    }
+		    if(!(outConne == null)){
+			break;
+		    }
+		}
+		if(outConne == null){
+		    return;
+		}
+		//console.log(outConne);
+		var connectionList = outConne.sourceBlock_.getConnections_(false);
+		for(var i = 0; i < connectionList.length; ++i){
+		    console.log(connectionList[i].targetConnection);
+		    if(connectionList[i].targetConnection!=null &&
+		       connectionList[i].targetConnection.sourceBlock_.id == selectedBlock.id){
+			var parentConnection = connectionList[i];
+			break;
+		    }
+		}
+
+		selectedBlock.setParent(null);
+		//newBlockConnection = newBlock.outputConnection;
+		var connection = Blockly.Connection.singleConnection_(
+		    newBlock.outputConnection.sourceBlock_,
+		    selectedBlock);
+		if(!(typeof connection  == "object")){
+		    // Reconnect
+		    parentConnection.connect(selectedBlockInputConnection);
+		    newBlock.dispose(true);
+		    return;
+		}
+		connection.connect(selectedBlockInputConnection);
+		parentConnection.connect(newBlockInputConnection);
+		Blockly.Tooltip.lastSelectedBlockID = newBlock.id;
+	    }
+	}
+    }else{
+	// Search the Output Block
+	var oppositeType = Blockly.OPPOSITE_TYPE[newBlockInputConnection.type];
+	for(var i = 0; i < newBlockInputConnection.dbList_[oppositeType].length;++i){
+	    var tempBlock = newBlockInputConnection.dbList_[oppositeType][i];
+	    if ( tempBlock.sourceBlock_.type == "output"){
+		var parentBlockConnection = tempBlock;
+		break
+	    }
+	}
+	var inputBlock = parentBlockConnection.sourceBlock_.childBlocks_[0];
+	var inputBlockInputConnection = inputBlock.outputConnection;
+	var checkType = tryConnect(newBlockInputConnection,
+				   parentBlockConnection,
+				   inputBlockInputConnection);
+	if(checkType){
+	    Blockly.Tooltip.lastSelectedBlockID = newBlock.id;
+	}else{
+	    console.log(newBlockInputConnection);
+	}
+    }
+}
+
+Blockly.Tooltip.autoInsertBlock2 = function(element){
     if(!element.workspace.isFlyout){
 	return;
     }
@@ -293,6 +498,15 @@ Blockly.Tooltip.autoInsertBlock = function(element){
 			break;
 		    }
 		}
+		var inputedConnection = outConne.targetConnection; // Connected with the output block
+		// Errorチェック
+		if(newBlockConnection.checkType_(outConne)){
+		    newBlockConnection.connect(outConne);
+		    Blockly.Tooltip.lastSelectedBlockID = newBlock.id;
+		}else{
+		    newBlock.dispose();
+		}
+		return;
 	    }else{
 		// for multiple input able Block
 		var outConne = null;
@@ -326,22 +540,16 @@ Blockly.Tooltip.autoInsertBlock = function(element){
 		var connection = Blockly.Connection.singleConnection_(
 		    newBlockConnection.sourceBlock_,
 		    inputedConnection.sourceBlock_);
+
 		try{
 		    connection.connect(inputedConnection);
 		    newBlockConnection.connect(parentConnection);
 		    Blockly.Tooltip.lastSelectedBlockID = newBlock.id;
 		}finally{
-		    
 		}
 		return;
 	    }
 
-	    if(newBlockConnection.checkType_(outConne)){
-		newBlockConnection.connect(outConne);
-		Blockly.Tooltip.lastSelectedBlockID = newBlock.id;
-	    }else{
-		newBlock.dispose();
-	    }
 	}else{
 	    var selectedBlockConnection = selectedBlock.getConnections_(false)[0]
 	    var connection = Blockly.Connection.singleConnection_(
