@@ -311,6 +311,7 @@ Blockly.Tooltip.autoInsertBlock = function(element){
 	    if(selectedBlock.type == "output"){
 		//selectedBlockConnection = selectedBlock.previousConnection;
 		selectedBlock.unselect();
+		newBlock.dispose(true);
 		return false;
 	    }
 	    var connection = Blockly.Connection.singleConnection_(
