@@ -266,8 +266,11 @@ Blockly.Tooltip.autoInsertBlock = function(element){
 	    inputBlockConnection.sourceBlock_);
 	if(!(typeof connection  == "object")){
 	    // Reconnect
-	    //parentBlockConnection.connect(inputBlockConnection);
-	    inputBlockConnection.connect(parentBlockConnection);
+	    var connection = Blockly.Connection.singleConnection_(
+		parentBlockConnection.sourceBlock_,
+		inputBlockConnection.sourceBlock_);
+	    console.log(connection);
+	    connection.connect(inputBlockConnection);
 	    newBlockConnection.sourceBlock_.dispose(true);
 	    return false;
 	}
