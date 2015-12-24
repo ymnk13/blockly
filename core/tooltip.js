@@ -228,9 +228,6 @@ Blockly.Tooltip.autoInsertBlock = function(element){
 	//  the block has the multiple input
 	return;
     }
-    if(Blockly.Tooltip.lastSelectedBlockType == element.type){
-	return;
-    }
     if (element.inputsInline){
 	return;
     }
