@@ -370,7 +370,7 @@ Blockly.Css.CONTENT = [
   /* Override the default Closure URL. */
   '.blocklyWidgetDiv .goog-option-selected .goog-menuitem-checkbox,',
   '.blocklyWidgetDiv .goog-option-selected .goog-menuitem-icon {',
-  '  background: url(<<<PATH>>>/sprites.png) no-repeat -48px -16px !important;',
+  '  background: "../blockly/media/sprites.png" no-repeat -48px -16px !important;',
   '}',
 
   /* Category tree in Toolbox. */
@@ -412,7 +412,7 @@ Blockly.Css.CONTENT = [
   '}',
 
   '.blocklyTreeIcon {',
-  '  background-image: url(<<<PATH>>>/sprites.png);',
+  '  background-image: "../blockly/media/sprites.png";',
   '  height: 16px;',
   '  vertical-align: middle;',
   '  width: 16px;',
@@ -585,28 +585,30 @@ Blockly.Css.CONTENT = [
   '.goog-hsv-palette-hs-handle,',
   '.goog-hsv-palette-v-handle {',
   '  //background-image: url(//ssl.gstatic.com/closure/hsv-sprite.png);',
-  '  background-image: url(http://ssl.gstatic.com/closure/hsv-sprite.png);',
+  '  background-image: url("../closure-library/closure/goog/images/hsv-sprite.png");',
   '}',
 
   '.goog-hsv-palette-noalpha .goog-hsv-palette-hs-image,',
   '.goog-hsv-palette-noalpha .goog-hsv-palette-v-image,',
   '.goog-hsv-palette-noalpha .goog-hsv-palette-hs-handle,',
   '.goog-hsv-palette-noalpha .goog-hsv-palette-v-handle {',
-  '  background-image: url(//ssl.gstatic.com/closure/hsv-sprite.gif);',
+  '  background-image: url("../closure-library/closure/goog/images/hsv-sprite.gif");',
   '}',
 
   '.goog-hsv-palette-sm-hs-image,',
   '.goog-hsv-palette-sm-v-image,',
   '.goog-hsv-palette-sm-hs-handle,',
   '.goog-hsv-palette-sm-v-handle {',
-  '  background-image: url(//ssl.gstatic.com/closure/hsv-sprite-sm.png);',
+  '  background-image: url("../closure-library/closure/goog/images/hsv-sprite-sm.png");',
   '}',
 
   '.goog-hsv-palette-noalpha .goog-hsv-palette-sm-hs-image,',
   '.goog-hsv-palette-noalpha .goog-hsv-palette-sm-v-image,',
   '.goog-hsv-palette-noalpha .goog-hsv-palette-sm-hs-handle,',
-  '.goog-hsv-palette-noalpha .goog-hsv-palette-sm-v-handle {',
-  '  background-image: url(//ssl.gstatic.com/closure/hsv-sprite-sm.gif);',
+    '.goog-hsv-palette-noalpha .goog-hsv-palette-sm-v-handle {',
+    //lib/closure-library/closure/goog/images
+    //'  background-image: url("../images/hsv-sprite-sm.gif");',
+    '  background-image: url("../closure-library/closure/goog/images/hsv-sprite-sm.gif");',
   '}',
 
   '.goog-hsv-palette-hs-image,',
