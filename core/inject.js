@@ -157,7 +157,8 @@ Blockly.parseOptions_ = function(options) {
     grid['length'] = parseFloat(grid['length']);
   }
   grid['snap'] = grid['spacing'] > 0 && !!grid['snap'];
-  var pathToMedia = 'https://blockly-demo.appspot.com/static/media/';
+  //var pathToMedia = 'https://blockly-demo.appspot.com/static/media/';
+  var pathToMedia = '../blockly/media/';
   if (options['media']) {
     pathToMedia = options['media'];
   } else if (options['path']) {
