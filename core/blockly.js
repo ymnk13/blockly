@@ -382,6 +382,16 @@ Blockly.onKeyDown_ = function(e) {
       if (e.keyCode == 67) {
         // 'c' for copy.
         Blockly.copy_(Blockly.selected);
+	var tempBlock = Blockly.selected;
+	if(tempBlock.getClipText){
+	  console.log(tempBlock.getClipText());
+	  var copyDummyClass = document.getElementById('copy-dummy');
+	  copyDummyClass.select();
+	    try{
+	    var bool = document.execCommand("copy");
+	    }catch(err){
+	    }
+	}
       } else if (e.keyCode == 88) {
         // 'x' for cut.
         Blockly.copy_(Blockly.selected);
